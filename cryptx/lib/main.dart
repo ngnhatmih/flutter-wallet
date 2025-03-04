@@ -13,7 +13,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(
           create: (_) => EthereumProvider(
-              dotenv.env['RPC_URL'] ?? 'http://127.0.0.1:7545', http.Client()),
+              dotenv.env['RPC_URL'] ?? 'http://127.0.0.1:7545', http.Client(), http.Client()),
         ),
       ],
       child: MyApp(),

@@ -21,8 +21,12 @@ dependencies:
   qr_flutter: ^4.1.0
   flutter_dotenv: ^5.2.1
   
+
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  
+  integration_test:
     sdk: flutter
 
   flutter_lints: ^2.0.0

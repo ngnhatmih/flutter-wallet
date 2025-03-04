@@ -12,7 +12,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EthereumProvider extends ChangeNotifier {
   final EthereumService _ethereumService;
-  final CoinGeckoService _coinGeckoService = CoinGeckoService();
+  final CoinGeckoService _coinGeckoService;
   final TransactionService _transactionService = TransactionService();
 
   List<TransactionModel> _transactions = [];
@@ -31,8 +31,9 @@ class EthereumProvider extends ChangeNotifier {
   double? _priceChange = 0.0;
   Timer? _timer;
 
-  EthereumProvider(String rpcUrl, Client httpClient)
-      : _ethereumService = EthereumService(rpcUrl, httpClient) {
+  EthereumProvider(String rpcUrl, Client httpClient, Client coingeckoClient)
+      : _ethereumService = EthereumService(rpcUrl, httpClient), 
+        _coinGeckoService = CoinGeckoService(coingeckoClient) {
     _walletModel = _wallets[0];
   }
 
@@ -134,7 +135,6 @@ class EthereumProvider extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       Future.microtask(() => notifyListeners());
-      rethrow;
     }
   }
 
