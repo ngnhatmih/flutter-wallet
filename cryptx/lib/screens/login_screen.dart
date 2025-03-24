@@ -49,6 +49,7 @@ class LoginScreenState extends State<LoginScreen> {
                   labelText: "Nhập mật khẩu",
                   border: OutlineInputBorder(),
                 ),
+                onSubmitted: (_) => _login(),
               ),
               SizedBox(height: 10),
               Text(
@@ -58,7 +59,7 @@ class LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _login,
-                child: Text("Đăng nhập"),
+                child: Text("Đăng Nhập"),
               ),
             ],
           ),

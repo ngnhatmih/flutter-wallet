@@ -16,7 +16,7 @@ void main() {
   setUp(() {
     httpClient = http.Client();
     rpcUrl = 'http://127.0.0.1:7545';
-    ethereumService = EthereumService(rpcUrl, httpClient);
+    ethereumService = EthereumService(rpcUrl, 1337, httpClient);
 
     creds = EthPrivateKey.fromHex('0x094825cdc585aa3f12e6b1b5ebea562c20e57a3ea0c51b517f76d77f2441e681');
     address = creds.address;

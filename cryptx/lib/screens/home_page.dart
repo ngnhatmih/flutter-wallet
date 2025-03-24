@@ -12,7 +12,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late EthereumProvider ethereumProvider;
   int _currentIndex = 0;
-  String network = 'Ethereum';
+  String? network;
 
   final List<Widget> _pages = [
     HomeScreen(),
@@ -28,9 +28,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      await ethereumProvider.loadNetworks();
+      setState(() {
+        network = ethereumProvider.currentNetwork?['name'].toString();
+      });
+    });
+  }
+
+  @override
   void dispose() {
     super.dispose();
-    ethereumProvider.dispose();
   }
 
   @override
@@ -143,17 +153,18 @@ class _HomePageState extends State<HomePage> {
                 ),
                 DropdownButton<String>(
                   value: network,
-                  items: ['Ethereum', 'Solana', 'Polygon'].map((String choice) {
+                  items: ethereumProvider.networkNames.map((String choice) {
                     return DropdownMenuItem<String>(
                       value: choice,
                       child: Text(choice),
                     );
                   }).toList(),
-                  onChanged: (String? newValue) {
+                  onChanged: (String? newValue) async {
                     if (newValue != null) {
                       setState(() {
                         network = newValue;
                       });
+                      await ethereumProvider.switchNetwork(newValue);
                     }
                   },
                 ),

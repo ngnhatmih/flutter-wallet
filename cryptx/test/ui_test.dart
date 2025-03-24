@@ -20,20 +20,12 @@ Future<void> returnToHomeScreen(WidgetTester tester) async {
 }
 
 Future<void> login(WidgetTester tester) async {
-  final mockHttpClient = MockClient((request) async {
-    return http.Response('{}', 200);
-  });
-
-  final mockCoinGeckoClient = MockClient((request) async {
-    return http.Response('{}', 200);
-  });
 
   await tester.pumpWidget(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => EthereumProvider(
-              dotenv.env['RPC_URL'] ?? 'http://127.0.0.1:7545', mockHttpClient, mockCoinGeckoClient),
+          create: (_) => EthereumProvider(),
         ),
       ],
       child: MyApp(),
@@ -59,21 +51,12 @@ void main() {
 
   group('MyApp Tests', () {
     testWidgets('MyApp starts and displays LoginScreen', (WidgetTester tester) async {
-      // Mock HttpClient
-      final mockHttpClient = MockClient((request) async {
-        return http.Response('{}', 200);
-      });
-
-      final mockCoinGeckoClient = MockClient((request) async {
-        return http.Response('{}', 200);
-      });
 
       await tester.pumpWidget(
         MultiProvider(
           providers: [
             ChangeNotifierProvider(
-              create: (_) => EthereumProvider(
-                  dotenv.env['RPC_URL'] ?? 'http://127.0.0.1:7545', mockHttpClient, mockCoinGeckoClient),
+              create: (_) => EthereumProvider(),
             ),
           ],
           child: MyApp(),

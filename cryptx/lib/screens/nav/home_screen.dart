@@ -12,6 +12,8 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   late EthereumProvider ethereumProvider;
+  late List<TokenCard> tokenCards;
+  TextEditingController tokenAddressController = TextEditingController();
 
   @override
   void initState() {
@@ -30,6 +32,7 @@ class HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    tokenAddressController.dispose();
     super.dispose();
   }
 
@@ -67,7 +70,7 @@ class HomeScreenState extends State<HomeScreen> {
                     '(${ethereumProvider.priceChange?.toStringAsFixed(2) ?? "NaN"}%)',
                     style: TextStyle(
                       fontSize: 16,
-                      color: ethereumProvider.priceChange! > 0
+                      color: (ethereumProvider.priceChange ?? 0.0) > 0
                           ? const Color.fromARGB(255, 0, 200, 0)
                           : const Color.fromARGB(255, 200, 0, 0),
                       backgroundColor: const Color.fromARGB(255, 215, 215, 215),
@@ -235,13 +238,93 @@ class HomeScreenState extends State<HomeScreen> {
             child: ListView(
               padding: EdgeInsets.all(16.0),
               children: [
+                SizedBox(
+                  width: double.infinity, 
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: Container(
+                              width: MediaQuery.of(context).size.width * 0.8, // Set the width of the dialog
+                              padding: EdgeInsets.all(16.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Import Token',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  TextField(
+                                    controller: tokenAddressController,
+                                    decoration: InputDecoration(
+                                      labelText: 'Token Address',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Text('Cancel'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () async {
+                                          showDialog(
+                                            context: context,
+                                            barrierDismissible: false,
+                                            builder: (BuildContext context) {
+                                              return Center(
+                                                child: CircularProgressIndicator(),
+                                              );
+                                            },
+                                          );
+                                          await ethereumProvider.importToken(tokenAddressController.text);
+                                          setState(() {}); // Trigger a rebuild to show the imported token
+                                          Navigator.of(context).pop(); // Close the loading dialog
+                                          Navigator.of(context).pop(); // Close the import token dialog
+                                        },
+                                        child: Text('Import'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: Text('Import Token'),
+                  ),
+                ),
+                SizedBox(height: 16),
                 TokenCard(
-                    tokenName: 'Ethereum',
-                    balance: "${ethereumProvider.walletModel?.getEtherAmount}",
-                    price:
-                        "${ethereumProvider.walletModel?.getBalance.toStringAsFixed(2)}"),
-                // TokenCard(tokenName: 'Solana', balance: '5.4', price: '23.00'),
-                // TokenCard(tokenName: 'USDT', balance: '127.5', price: '1.00'),
+                  tokenName: ethereumProvider.currentNetwork?['currencySymbol'] ?? 'ETH',
+                  balance: "${ethereumProvider.walletModel?.getEtherAmount.toStringAsFixed(3)}",
+                  price: "${ethereumProvider.walletModel?.getBalance.toStringAsFixed(3)}",
+                ),
+                FutureBuilder<List<TokenCard>>(
+                  future: ethereumProvider.getTokens(ethereumProvider.currentNetwork?['chainId'].toString() ?? ''),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else {
+                      return Column(
+                        children: snapshot.data!,
+                      );
+                    }
+                  },
+                ),
               ],
             ),
           ),
