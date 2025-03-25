@@ -59,6 +59,11 @@ class EthereumProvider extends ChangeNotifier {
         _walletModel = _wallets[0];
         saveVault(_wallets);
       });
+
+      loadTokens().then((tl) {
+        _tokens = tl;
+        saveTokens(_tokens);
+      });
     }
   }
 
@@ -87,6 +92,26 @@ class EthereumProvider extends ChangeNotifier {
     saveToSecureStorage("vault", wljson, pw);
   }
 
+  Future<List<TokenModel>> loadTokens() async {
+    final pw = getPassword()!;
+    List<TokenModel> tl = [];
+    var a = await getFromSecureStorage("tokens", pw).toDart;
+    if (a != null) {
+      final List<dynamic> data = jsonDecode(a.toString());
+      print(data);
+      tl = data.map((token) => TokenModel.fromJson(token)).toList().cast<TokenModel>();
+    }
+
+    return tl;
+  }
+
+  void saveTokens(List<TokenModel> tls) async {
+    final pw = getPassword()!;
+    final tljson = jsonEncode(tls.map((e) => e.toJson()).toList());
+    
+    saveToSecureStorage("tokens", tljson, pw);
+  }
+
   WalletModel? get walletModel => _walletModel;
   bool get isLoading => _isLoading;
   double get gasFee => _gasFee;
@@ -97,6 +122,8 @@ class EthereumProvider extends ChangeNotifier {
   List<TokenModel> get tokens => _tokens;
   Map<String, dynamic>? get currentNetwork => _currentNetwork;
   List<String> get networkNames => networks.map((n) => n['name'] as String).toList();
+  
+  List<TokenModel> get tokensByChainId => _tokens.where((token) => token.chainId == _currentNetwork?['chainId'].toString()).toList();
 
   Future<void> loadNetworks() async {
     final String response = await rootBundle.loadString('assets/networks.json');  
@@ -105,6 +132,8 @@ class EthereumProvider extends ChangeNotifier {
     _currentNetwork ??= networks.first;
     _ethereumService = EthereumService(_currentNetwork!['rpcUrl'], _currentNetwork!['chainId'], Client());
     await _ethereumService.loadABI();
+    await _ethereumService.loadUniswapABI();
+
     notifyListeners();
   }
 
@@ -112,6 +141,7 @@ class EthereumProvider extends ChangeNotifier {
     _currentNetwork = networks.firstWhere((network) => network['name'] == networkName);
     _ethereumService = EthereumService(_currentNetwork!['rpcUrl'], _currentNetwork!['chainId'], Client());
     await _ethereumService.loadABI();
+    await _ethereumService.loadUniswapABI();
     await fetchBalance();
     await loadTransactions();
     notifyListeners();
@@ -195,6 +225,7 @@ class EthereumProvider extends ChangeNotifier {
         to: WalletModel(publicKey: receiver),
         amount: ethAmount,
         tokenSymbol: tokenSymbol,
+        type: 'transfer',
       ));
 
       await fetchBalance();
@@ -236,6 +267,7 @@ class EthereumProvider extends ChangeNotifier {
       to: WalletModel(publicKey: receiver),
       amount: tokenAmount,
       tokenSymbol: tokenSymbol,
+      type: 'transfer',
     ));
 
     await fetchBalance();
@@ -324,6 +356,7 @@ class EthereumProvider extends ChangeNotifier {
         address: address,
       );
       _tokens.add(token);
+      saveTokens(_tokens);
       notifyListeners();
     } catch (e) {
       rethrow;
@@ -368,4 +401,130 @@ class EthereumProvider extends ChangeNotifier {
     return data;
   }
   
+  Future<void> swapTokens({
+    required String tokenInAddress,
+    required String tokenOutAddress,
+    required double amountIn,
+    required double amountOutMin,
+    required String recipientAddress,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      bool isTokenInPrimary = tokenInAddress == "primary";
+      bool isTokenOutPrimary = tokenOutAddress == "primary";
+
+      final wrappedTokenAddress = _currentNetwork?['wrappedTokenAddress'];
+      final tokenIn = isTokenInPrimary ? wrappedTokenAddress.toLowerCase() : tokenInAddress.toLowerCase();
+      final tokenOut = isTokenOutPrimary ? wrappedTokenAddress.toLowerCase() : tokenOutAddress.toLowerCase();
+
+      final decimalsIn = await _ethereumService.getTokenDecimals(EthereumAddress.fromHex(tokenIn));
+      final decimalsOut = await _ethereumService.getTokenDecimals(EthereumAddress.fromHex(tokenOut));
+      final amountInWei = BigInt.from(amountIn * BigInt.from(10).pow(decimalsIn).toDouble());
+      final amountOutMinWei = BigInt.from(amountOutMin * BigInt.from(10).pow(decimalsOut).toDouble());
+
+      final path = isTokenInPrimary
+          ? [
+              EthereumAddress.fromHex(wrappedTokenAddress),
+              EthereumAddress.fromHex(tokenOut),
+            ]
+          : isTokenOutPrimary
+              ? [
+                  EthereumAddress.fromHex(tokenIn),
+                  EthereumAddress.fromHex(wrappedTokenAddress),
+                ]
+              : [
+                  EthereumAddress.fromHex(tokenIn),
+                  EthereumAddress.fromHex(tokenOut),
+                ];
+
+      final deadline = BigInt.from(DateTime.now().millisecondsSinceEpoch ~/ 1000 + 600);
+      final recipient = EthereumAddress.fromHex(recipientAddress);
+
+      final uniswapContractAddress = EthereumAddress.fromHex(_currentNetwork?['uniswap_ca']);
+
+      String txHash;
+      if (isTokenInPrimary) {
+        txHash = await _ethereumService.swapExactETHForTokens(
+          credentials: EthPrivateKey.fromHex(_walletModel.getPrivateKey),
+          amountOutMin: amountOutMinWei,
+          path: path,
+          to: recipient,
+          deadline: deadline,
+          uniswapContractAddress: uniswapContractAddress,
+          value: amountInWei,
+        );
+      } else if (isTokenOutPrimary) {
+        txHash = await _ethereumService.swapExactTokensForETH(
+          credentials: EthPrivateKey.fromHex(_walletModel.getPrivateKey),
+          amountIn: amountInWei,
+          amountOutMin: amountOutMinWei,
+          path: path,
+          to: recipient,
+          deadline: deadline,
+          uniswapContractAddress: uniswapContractAddress,
+        );
+      } else {
+        txHash = await _ethereumService.swapTokens(
+          credentials: EthPrivateKey.fromHex(_walletModel.getPrivateKey),
+          amountIn: amountInWei,
+          amountOutMin: amountOutMinWei,
+          path: path,
+          to: recipient,
+          deadline: deadline,
+          uniswapContractAddress: uniswapContractAddress,
+        );
+      }
+      final symbolIn = isTokenInPrimary ? _currentNetwork!['currencySymbol'] : tokenInAddress;
+      final symbolOut = isTokenOutPrimary ? _currentNetwork!['currencySymbol'] : tokenOutAddress;
+
+      await _transactionService.createTransaction(TransactionModel(
+        from: _walletModel,
+        to: WalletModel(publicKey: recipientAddress),
+        amount: amountIn,
+        tokenSymbol: "$symbolIn -> $symbolOut",
+        type: 'swap',
+      ));
+
+      print("Swap Transaction Hash: $txHash");
+
+      await fetchBalance();
+    } catch (e) {
+      print("Error during token swap: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<double> calculateAmountOut({
+    required double amountIn,
+    required String tokenInAddress,
+    required String tokenOutAddress,
+  }) async {
+    bool isTokenInPrimary = tokenInAddress == "primary";
+    bool isTokenOutPrimary = tokenOutAddress == "primary";
+
+    final wrappedTokenAddress = _currentNetwork?['wrappedTokenAddress'];
+    final tokenIn = isTokenInPrimary ? wrappedTokenAddress : tokenInAddress;
+    final tokenOut = isTokenOutPrimary ? wrappedTokenAddress : tokenOutAddress;
+
+    final decimalsIn = await _ethereumService.getTokenDecimals(EthereumAddress.fromHex(tokenIn.toLowerCase()));
+    final amountInWei = BigInt.from(amountIn * BigInt.from(10).pow(decimalsIn).toDouble());
+    final path = [
+      EthereumAddress.fromHex(tokenIn.toLowerCase()),
+      EthereumAddress.fromHex(tokenOut.toLowerCase()),
+    ];
+
+    final uniswapContractAddress = EthereumAddress.fromHex(_currentNetwork?['uniswap_ca']);
+    final decimalsOut = await _ethereumService.getTokenDecimals(EthereumAddress.fromHex(tokenOut.toLowerCase()));
+    final rs = await _ethereumService.getAmountOut(
+      amountIn: amountInWei,
+      path: path,
+      uniswapContractAddress: uniswapContractAddress,
+    );
+
+    return rs.toDouble() / BigInt.from(10).pow(decimalsOut).toDouble();
+  }
 }

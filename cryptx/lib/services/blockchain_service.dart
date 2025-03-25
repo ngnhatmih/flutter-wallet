@@ -2,13 +2,13 @@ import 'package:flutter/services.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:http/http.dart' as http;
 
-
 class EthereumService {
   final String rpcUrl;
   final int chainId;
   final http.Client httpClient;
   late Web3Client ethClient;
   late String abi;
+  late String uniswapAbi;
 
   EthereumService(this.rpcUrl, this.chainId, this.httpClient) {
     ethClient = Web3Client(rpcUrl, httpClient);
@@ -16,6 +16,10 @@ class EthereumService {
 
   Future<void> loadABI() async {
     abi = await rootBundle.loadString('assets/abi.json');
+  }
+
+  Future<void> loadUniswapABI() async {
+    uniswapAbi = await rootBundle.loadString('assets/uniswap_abi.json');
   }
 
   Future<DeployedContract> loadContract(EthereumAddress tokenAddress) async {
@@ -105,9 +109,158 @@ class EthereumService {
     return await ethClient.getBlockInformation();
   }
 
+  Future<String> swapTokens({
+    required Credentials credentials,
+    required BigInt amountIn,
+    required BigInt amountOutMin,
+    required List<EthereumAddress> path,
+    required EthereumAddress to,
+    required BigInt deadline,
+    required EthereumAddress uniswapContractAddress,
+  }) async {
+    if (uniswapAbi.isEmpty) {
+      await loadUniswapABI();
+    }
+
+    final contract = DeployedContract(
+      ContractAbi.fromJson(uniswapAbi, "UniswapV2Router"),
+      uniswapContractAddress,
+    );
+
+    final swapFunction = contract.function("swapExactTokensForTokens");
+
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: swapFunction,
+      parameters: [
+        amountIn,
+        amountOutMin, 
+        path,
+        to, 
+        deadline, 
+      ],
+    );
+
+    final txHash = await ethClient.sendTransaction(
+      credentials,
+      transaction,
+      chainId: chainId,
+    );
+
+    return txHash; 
+  }
+
+  Future<String> swapExactETHForTokens({
+    required Credentials credentials,
+    required BigInt amountOutMin,
+    required List<EthereumAddress> path,
+    required EthereumAddress to,
+    required BigInt deadline,
+    required EthereumAddress uniswapContractAddress,
+    required BigInt value,
+  }) async {
+    if (uniswapAbi.isEmpty) {
+      await loadUniswapABI();
+    }
+
+    final contract = DeployedContract(
+      ContractAbi.fromJson(uniswapAbi, "UniswapV2Router"),
+      uniswapContractAddress,
+    );
+
+    final swapFunction = contract.function("swapExactETHForTokens");
+
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: swapFunction,
+      parameters: [
+        amountOutMin,
+        path,
+        to,
+        deadline,
+      ],
+      value: EtherAmount.inWei(value),
+    );
+
+    final txHash = await ethClient.sendTransaction(
+      credentials,
+      transaction,
+      chainId: chainId,
+    );
+
+    return txHash;
+  }
+
+  Future<String> swapExactTokensForETH({
+    required Credentials credentials,
+    required BigInt amountIn,
+    required BigInt amountOutMin,
+    required List<EthereumAddress> path,
+    required EthereumAddress to,
+    required BigInt deadline,
+    required EthereumAddress uniswapContractAddress,
+  }) async {
+    if (uniswapAbi.isEmpty) {
+      await loadUniswapABI();
+    }
+
+    final contract = DeployedContract(
+      ContractAbi.fromJson(uniswapAbi, "UniswapV2Router"),
+      uniswapContractAddress,
+    );
+
+    final swapFunction = contract.function("swapExactTokensForETH");
+
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: swapFunction,
+      parameters: [
+        amountIn,
+        amountOutMin,
+        path,
+        to,
+        deadline,
+      ],
+    );
+
+    final txHash = await ethClient.sendTransaction(
+      credentials,
+      transaction,
+      chainId: chainId,
+    );
+
+    return txHash;
+  }
+
+  Future<BigInt> getAmountOut({
+    required BigInt amountIn,
+    required List<EthereumAddress> path,
+    required EthereumAddress uniswapContractAddress,
+  }) async {
+    if (uniswapAbi.isEmpty) {
+      await loadUniswapABI();
+    }
+
+    final contract = DeployedContract(
+      ContractAbi.fromJson(uniswapAbi, "UniswapV2Router"),
+      uniswapContractAddress,
+    );
+
+    final getAmountsOutFunction = contract.function("getAmountsOut");
+
+    // Call the `getAmountsOut` function
+    final result = await ethClient.call(
+      contract: contract,
+      function: getAmountsOutFunction,
+      params: [amountIn, path],
+    );
+
+    // The last element in the result is the output amount
+    final amounts = result.first as List<dynamic>;
+    return amounts.last as BigInt;
+  }
+
   void close() {
     ethClient.dispose();
   }
-
-  
 }

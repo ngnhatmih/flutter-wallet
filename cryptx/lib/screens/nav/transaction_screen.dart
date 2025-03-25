@@ -17,16 +17,26 @@ class HistoryScreenState extends State<HistoryScreen> {
       await ethereumProvider.loadTransactions();
 
       for (var transaction in ethereumProvider.transactions) {
-        transactions.add({
-          "type": transaction.to!.getAddress ==
-                  ethereumProvider.walletModel!.getAddress
-              ? "Nhận"
-              : "Gửi",
-          "amount": transaction.amount,
-          "address": AddressFormat.formatAddress(transaction.to!.getAddress),
-          "date": transaction.date,
-          "status": "Thành công",
-        });
+        if (transaction.type == "transfer") {
+          transactions.add({
+            "type": transaction.to!.getAddress ==
+                    ethereumProvider.walletModel!.getAddress
+                ? "Nhận"
+                : "Gửi",
+            "amount": transaction.amount,
+            "address": AddressFormat.formatAddress(transaction.to!.getAddress),
+            "date": transaction.date,
+            "status": "Thành công",
+          });
+        } else if (transaction.type == "swap") {
+          transactions.add({
+            "type": "Swap",
+            "amount": transaction.amount,
+            "address": "Uniswap",
+            "date": transaction.date,
+            "status": "Thành công",
+          });
+        }
       }
 
       transactions.sort((a, b) => b["date"].compareTo(a["date"]));
@@ -94,22 +104,28 @@ class HistoryScreenState extends State<HistoryScreen> {
                     ? Colors.orange[100]
                     : transaction["type"] == "Nhận"
                         ? Colors.green[100]
-                        : Colors.blue[100],
+                        : transaction["type"] == "Swap"
+                            ? Colors.purple[100]
+                            : Colors.blue[100],
                 child: Icon(
                   transaction["type"] == "Gửi"
                       ? Icons.arrow_upward
                       : transaction["type"] == "Nhận"
                           ? Icons.arrow_downward
-                          : Icons.swap_horiz,
+                          : transaction["type"] == "Swap"
+                              ? Icons.swap_horiz 
+                              : Icons.help_outline, 
                   color: transaction["type"] == "Gửi"
                       ? Colors.orange
                       : transaction["type"] == "Nhận"
                           ? Colors.green
-                          : Colors.blue,
+                          : transaction["type"] == "Swap"
+                              ? Colors.purple // Add a new color for "Swap"
+                              : Colors.blue,
                 ),
               ),
               title: Text(
-                "${transaction["type"]} ${transaction["amount"]} ${transaction["tokenSymbol"]}", // Hiển thị tokenSymbol
+                "${transaction["type"]} ${transaction["amount"]} ${transaction["tokenSymbol"]}", // Display tokenSymbol
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
@@ -126,7 +142,7 @@ class HistoryScreenState extends State<HistoryScreen> {
                 ),
               ),
               onTap: () {
-                // Thêm xử lý khi nhấn vào giao dịch
+                // Add handling when tapping on a transaction
               },
             );
           },

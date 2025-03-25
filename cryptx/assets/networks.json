@@ -4,31 +4,55 @@
             "name": "Testnet",
             "rpcUrl": "http://127.0.0.1:7545",
             "chainId": 1337,
-            "currencySymbol": "ETH"
+            "currencySymbol": "ETH",
+            "wrappedTokenAddress": "0x0000000000000000000000000000000000000000"
         },
         {
             "name": "Ethereum",
             "rpcUrl": "https://mainnet.infura.io/v3/5bd6b3458a3e4b68b75f46b16578eab9",
             "chainId": 1,
-            "currencySymbol": "ETH"
+            "currencySymbol": "ETH",
+            "uniswap_ca": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+            "wrappedTokenAddress": "0xC02aaa39b223FE8D0A0e5C4F27eAD9083C756Cc2" 
         },
         {
-            "name": "BSC",
-            "rpcUrl": "https://bsc-dataseed.binance.org/",
-            "chainId": 56,
-            "currencySymbol": "BNB"
+            "name": "Base",
+            "rpcUrl": "https://mainnet.base.org",
+            "chainId": 8453,
+            "currencySymbol": "ETH",
+            "uniswap_ca": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+            "wrappedTokenAddress": "0x4200000000000000000000000000000000000006" 
+        },
+        {
+            "name": "Arbitrum One",
+            "rpcUrl": "https://arb1.arbitrum.io/rpc",
+            "chainId": 42161,
+            "currencySymbol": "ETH",
+            "uniswap_ca": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+            "wrappedTokenAddress": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1" 
         },
         {
             "name": "Polygon",
             "rpcUrl": "https://polygon-rpc.com/",
             "chainId": 137,
-            "currencySymbol": "MATIC"
+            "currencySymbol": "MATIC",
+            "uniswap_ca": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+            "wrappedTokenAddress": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619" 
+        },
+        {
+            "name": "Sepolia",
+            "rpcUrl": "https://eth-sepolia.public.blastapi.io",
+            "chainId": 11155111,
+            "currencySymbol": "SepoliaETH",
+            "uniswap_ca": "0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3",
+            "wrappedTokenAddress": "0x0000000000000000000000000000000000000000" 
         },
         {
             "name": "Monad",
             "rpcUrl": "https://testnet-rpc.monad.xyz/",
             "chainId": 10143,
-            "currencySymbol": "MON"
+            "currencySymbol": "MON",
+            "wrappedTokenAddress": "0x0000000000000000000000000000000000000000" 
         }
     ]
 }

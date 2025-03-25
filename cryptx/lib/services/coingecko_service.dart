@@ -9,6 +9,7 @@ class CoinGeckoService {
   late final headers;
   static const Map<String, String> cryptoMapping = {
     "ETH": "ethereum",
+    "SepoliaETH": "ethereum",
     "BNB": "binancecoin",
     "MATIC": "matic-network",
     "SOL": "solana",

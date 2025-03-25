@@ -6,15 +6,17 @@ class TransactionModel {
   final num amount;
   final String date;
   final String tokenSymbol;
+  final String type; 
 
   TransactionModel({
     required this.from,
     required this.to,
     required this.amount,
     required this.tokenSymbol,
+    required this.type
   }) : date = DateTime.now().toString();
 
-  TransactionModel.fromString(String from, String to, this.amount, this.tokenSymbol)
+  TransactionModel.fromString(String from, String to, this.amount, this.tokenSymbol, this.type)
       : from = WalletModel(publicKey: from),
         to = WalletModel(publicKey: to),
         date = DateTime.now().toString();
@@ -24,6 +26,7 @@ class TransactionModel {
         to = json['to'] != null ? WalletModel(publicKey: json['to']) : null,
         amount = json['amount'],
         tokenSymbol = json['tokenSymbol'],
+        type = json['type'],
         date = json['date'];
 
   Map<String, dynamic> toJson() {
@@ -32,6 +35,7 @@ class TransactionModel {
       'to': to?.getAddress ?? 'unknown',
       'amount': amount.toDouble(),
       'tokenSymbol': tokenSymbol,
+      'type': type,
       'date': date,
     };
   }
