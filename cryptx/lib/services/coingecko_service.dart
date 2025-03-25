@@ -36,14 +36,17 @@ class CoinGeckoService {
     final cryptoId = cryptoMapping[symbol.toUpperCase()];
     final url = Uri.parse("$baseUrl/simple/price?ids=$cryptoId&vs_currencies=$currency");
 
-    final response = await http_client.get(url, headers: headers);
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return (data[cryptoId]?[currency] as num?)?.toDouble();
-    } else {
-      throw Exception("Failed to fetch crypto price: ${response.statusCode}");
+    try {
+      final response = await http_client.get(url, headers: headers);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return (data[cryptoId]?[currency] as num?)?.toDouble();
+      }
+    } catch (e) {
+      print("Failed to fetch crypto price: ${e.toString()}");
     }
+
+    return 0.0;
   }
 
   Future<double?> getCryptoPriceChange(String symbol, String currency) async {
@@ -54,14 +57,18 @@ class CoinGeckoService {
     final cryptoId = cryptoMapping[symbol.toUpperCase()];
     final url = Uri.parse("$baseUrl/simple/price?ids=$cryptoId&vs_currencies=$currency&include_24hr_change=true");
 
-    final response = await http_client.get(url, headers: headers);
+    try {
+      final response = await http_client.get(url, headers: headers);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return (data[cryptoId]?["usd_24h_change"] as num?)?.toDouble();
-    } else {
-      throw Exception("Failed to fetch crypto price: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return (data[cryptoId]?["usd_24h_change"] as num?)?.toDouble();
+      } 
+    } catch (e) {
+      print("Failed to fetch crypto price change: ${e.toString()}");
     }
+
+    return 0.0;
   }
 
   Future<String> getCryptoIcon(String symbol) async {

@@ -143,6 +143,7 @@ class EthereumProvider extends ChangeNotifier {
     await _ethereumService.loadABI();
     await _ethereumService.loadUniswapABI();
     await fetchBalance();
+    await fetchPriceChange();
     await loadTransactions();
     notifyListeners();
   }
@@ -298,7 +299,7 @@ class EthereumProvider extends ChangeNotifier {
 
       EtherAmount ether = await _ethereumService
           .getBalance(EthereumAddress.fromHex(_walletModel.getAddress));
-
+      
       double? price =
           await _coinGeckoService.getCryptoPrice(currentNetwork?['currencySymbol'] ?? '', 'usd');
 
@@ -306,9 +307,9 @@ class EthereumProvider extends ChangeNotifier {
       var sum =
           price != null ? _walletModel.getEtherAmount * price : 0;
 
-      for (TokenModel token in _tokens) {
+      for (TokenModel token in tokensByChainId) {
         EtherAmount balance = await _ethereumService.getAmount(
-            EthereumAddress.fromHex(token.address),
+            EthereumAddress.fromHex(token.address.toLowerCase()),
             EthereumAddress.fromHex(_walletModel.getAddress));
 
         
@@ -317,14 +318,19 @@ class EthereumProvider extends ChangeNotifier {
         var price = await _coinGeckoService.getCryptoPrice(token.symbol, 'usd') ?? 0.0;
         
         sum += token.balance * price;
+
       }
 
+      saveTokens(tokens);
+      print(sum);
       _walletModel.setBalance = sum.toDouble();
 
       _isLoading = false;
       Future.microtask(() => notifyListeners());
     } catch (e) {
       _isLoading = false;
+      print(e);
+      print("_walletModel = ${_walletModel.toJson()}");
       Future.microtask(() => notifyListeners());
     }
   }
@@ -371,7 +377,9 @@ class EthereumProvider extends ChangeNotifier {
   Future<List<TokenCard>> getTokens(String chainId) async {
     List<TokenCard> tokenCards = [];
     for (TokenModel token in _tokens) {
+
       if (token.chainId == chainId) {
+        print(token.toJson());
         var symbol = token.symbol;
         var balance = token.balance;
         var price = await _coinGeckoService.getCryptoPrice(symbol, 'usd') ?? 0.0;

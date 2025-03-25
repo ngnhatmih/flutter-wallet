@@ -42,8 +42,8 @@ class WalletModel {
 
   factory WalletModel.fromJson(Map<String, dynamic> json) {
     return WalletModel(
-      privateKey: json['privkey'],
-      publicKey: json['address'],
+      privateKey: json['privkey'].toLowerCase(),
+      publicKey: json['address'].toLowerCase(),
     );
   }
 
