@@ -11,7 +11,6 @@ class QRScannerScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // QR Scanner
           MobileScanner(
             onDetect: (rs) {
               if (rs.barcodes.first.rawValue != null) {
