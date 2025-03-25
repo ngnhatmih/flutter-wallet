@@ -481,8 +481,8 @@ class EthereumProvider extends ChangeNotifier {
           uniswapContractAddress: uniswapContractAddress,
         );
       }
-      final symbolIn = isTokenInPrimary ? _currentNetwork!['currencySymbol'] : tokenInAddress;
-      final symbolOut = isTokenOutPrimary ? _currentNetwork!['currencySymbol'] : tokenOutAddress;
+      final symbolIn = isTokenInPrimary ? _currentNetwork!['currencySymbol'] : tokens.where((token) => token.address == tokenInAddress).first.symbol;
+      final symbolOut = isTokenOutPrimary ? _currentNetwork!['currencySymbol'] : tokens.where((token) => token.address == tokenOutAddress).first.symbol;
 
       await _transactionService.createTransaction(TransactionModel(
         from: _walletModel,
