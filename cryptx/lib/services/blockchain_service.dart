@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:http/http.dart' as http;
 
+
 class EthereumService {
   final String rpcUrl;
   final int chainId;
@@ -83,6 +84,7 @@ class EthereumService {
     );
 
     final response = await ethClient.sendTransaction(credentials, transaction, chainId: chainId);
+
     return response;
   }
 
@@ -97,4 +99,6 @@ class EthereumService {
   void close() {
     ethClient.dispose();
   }
+
+  
 }

@@ -20,6 +20,7 @@ class TransactionService {
           'to': transaction.to?.address,
           'amount': transaction.amount,
           'date': transaction.date,
+          'tokenSymbol': transaction.tokenSymbol, // Thêm tokenSymbol vào payload
         }),
       );
 

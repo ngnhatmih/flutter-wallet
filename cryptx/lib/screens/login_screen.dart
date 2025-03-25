@@ -1,6 +1,10 @@
+import 'dart:js_interop';
+
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 
+@JS('getPassword')
+external String? getPassword();
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -9,14 +13,13 @@ class LoginScreen extends StatefulWidget {
 
 class LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
-  final String _correctPassword = "admin123";
   final FocusNode _passwordFocusNode = FocusNode();
   String _errorMessage = "";
 
   void _login() {
     _passwordFocusNode.unfocus();
 
-    if (_passwordController.text == _correctPassword) {
+    if (_passwordController.text == getPassword()) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => HomePage()),

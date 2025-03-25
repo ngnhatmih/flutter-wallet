@@ -43,7 +43,12 @@ class CoinGeckoService {
     }
   }
 
-  Future<double?> getCryptoPriceChange(String cryptoId, String currency) async {
+  Future<double?> getCryptoPriceChange(String symbol, String currency) async {
+    if (!cryptoMapping.containsValue(symbol)) {
+      return 0.0;
+    }
+
+    final cryptoId = cryptoMapping[symbol.toUpperCase()];
     final url = Uri.parse("$baseUrl/simple/price?ids=$cryptoId&vs_currencies=$currency&include_24hr_change=true");
 
     final response = await http_client.get(url, headers: headers);

@@ -52,6 +52,7 @@ class HistoryScreenState extends State<HistoryScreen> {
                 ? "Nhận"
                 : "Gửi",
             "amount": transaction.amount,
+            "tokenSymbol": transaction.tokenSymbol,
             "address": AddressFormat.formatAddress(transaction.to!.getAddress),
             "date": transaction.date,
             "status": "Thành công",
@@ -108,7 +109,7 @@ class HistoryScreenState extends State<HistoryScreen> {
                 ),
               ),
               title: Text(
-                "${transaction["type"]} ${transaction["amount"]} ETH",
+                "${transaction["type"]} ${transaction["amount"]} ${transaction["tokenSymbol"]}", // Hiển thị tokenSymbol
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(

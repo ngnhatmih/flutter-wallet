@@ -214,8 +214,11 @@ class SendScreenState extends State<SendScreen> {
                 ElevatedButton(
                   onPressed: () {
                     if (isValidInput()) {
-                      ethereumProvider.sendTransaction(addressController.text.toLowerCase(),
-                          double.parse(amountController.text));
+                      ethereumProvider.sendTransaction(
+                        addressController.text.toLowerCase(),
+                        double.parse(amountController.text),
+                        tokenSymbol: selectedToken, // Truyền tokenSymbol
+                      );
                       amountController.clear();
                       addressController.clear();
                       setState(() {

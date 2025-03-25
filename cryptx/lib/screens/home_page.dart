@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wallet/models/wallet_model.dart';
 import 'package:wallet/providers/ethereum_provider.dart';
 import 'package:wallet/utils/format.dart';
 import 'package:wallet/screens/nav/_nav.dart';
@@ -24,7 +25,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    ethereumProvider = Provider.of<EthereumProvider>(context, listen: false);
+    ethereumProvider = Provider.of<EthereumProvider>(context, listen: true);
   }
 
   @override
@@ -54,8 +55,27 @@ class _HomePageState extends State<HomePage> {
             backgroundColor: Colors.orange[100],
             child: Icon(Icons.account_balance_wallet, color: Colors.orange),
           ),
-          title: Text('Ví ${i + 1}'),
+          title: Text('Wallet ${i + 1}'),
           subtitle: Text(AddressFormat.formatAddress(ethereumProvider.wallets[i].address ?? '0x123...789')),
+          trailing: IconButton(
+            icon: Icon(Icons.delete, color: Colors.red),
+            onPressed: () {
+              if (ethereumProvider.wallets.length > 1) {
+                setState(() {
+                  ethereumProvider.wallets.removeAt(i);
+                });
+                ethereumProvider.saveVault(ethereumProvider.wallets); 
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Wallet ${i + 1} xóa thành công!')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Không thể xóa ví')),
+                );
+              }
+            },
+          ),
           onTap: () {
             ethereumProvider.switchWallet(i);
             Navigator.pop(context);
@@ -63,19 +83,6 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
-
-    wallets.add(
-      ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.green[100],
-          child: Icon(Icons.add, color: Colors.green),
-        ),
-        title: Text('Tạo ví mới'),
-        onTap: () {
-          Navigator.pop(context);
-        },
-      ),
-    );
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -95,7 +102,7 @@ class _HomePageState extends State<HomePage> {
                       context: context,
                       builder: (BuildContext context) {
                         return Container(
-                          height: 280,
+                          height: 280, // Set a fixed height for the modal
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.only(
@@ -105,21 +112,97 @@ class _HomePageState extends State<HomePage> {
                           ),
                           child: Column(
                             children: [
-                              ...wallets,
-                              Divider(),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.edit, color: Colors.blue),
-                                    onPressed: () {},
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () {},
-                                  ),
-                                ],
+                              Expanded(
+                                child: ListView(
+                                  padding: EdgeInsets.zero,
+                                  children: [
+                                    ...wallets,
+                                  ],
+                                ),
+                              ),
+                              Divider(), 
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    IconButton(icon: Icon(Icons.add, color: Colors.green),
+                                      onPressed: () async {
+                                        final newWalletData = await ethereumProvider.generateSeed();
+                                        final newWallet = WalletModel.fromJson(newWalletData);
+
+                                        setState(() {
+                                          ethereumProvider.wallets.add(newWallet);
+                                        });
+
+                                        ethereumProvider.saveVault(ethereumProvider.wallets);
+                                        Navigator.pop(context);
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.download, color: Colors.blue),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            TextEditingController privateKeyController = TextEditingController();
+                                            return AlertDialog(
+                                              title: Text('Import Wallet'),
+                                              content: TextField(
+                                                controller: privateKeyController,
+                                                decoration: InputDecoration(
+                                                  hintText: 'Enter Private Key',
+                                                  border: OutlineInputBorder(),
+                                                ),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop(); // Close the dialog
+                                                  },
+                                                  child: Text('Cancel'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    final privateKey = privateKeyController.text.trim();
+                                                    if (privateKey.isNotEmpty) {
+                                                      try {
+                                                        // Create a new wallet using the private key
+                                                        final newWallet = WalletModel(privateKey: privateKey);
+
+                                                        setState(() {
+                                                          ethereumProvider.wallets.add(newWallet);
+                                                        });
+
+                                                        // Save the updated wallet list
+                                                        ethereumProvider.saveVault(ethereumProvider.wallets);
+
+                                                        Navigator.of(context).pop(); // Close the dialog
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          SnackBar(content: Text('Wallet imported successfully!')),
+                                                        );
+                                                      } catch (e) {
+                                                        // Handle invalid private key
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          SnackBar(content: Text('Invalid private key!')),
+                                                        );
+                                                      }
+                                                    } else {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(content: Text('Private key cannot be empty!')),
+                                                      );
+                                                    }
+                                                  },
+                                                  child: Text('Import'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -171,7 +254,14 @@ class _HomePageState extends State<HomePage> {
                 Spacer(),
                 IconButton(
                   icon: Icon(Icons.qr_code_scanner),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReceiveScreen(),
+                      ),
+                    );
+                  },
                 ),
                 PopupMenuButton(
                   icon: Icon(Icons.settings),
