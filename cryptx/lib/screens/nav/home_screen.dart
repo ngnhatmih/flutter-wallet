@@ -190,42 +190,6 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-
-                  // Nút Mua
-                  Column(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => BuyAndSellScreen()),
-                          );
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.orange[100],
-                            shape: BoxShape.circle,
-                          ),
-                          padding: EdgeInsets.all(12),
-                          child: Icon(
-                            Icons.shopping_cart,
-                            color: Colors.orange,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Mua',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ],
@@ -247,7 +211,7 @@ class HomeScreenState extends State<HomeScreen> {
                         builder: (BuildContext context) {
                           return Dialog(
                             child: Container(
-                              width: MediaQuery.of(context).size.width * 0.8, // Set the width of the dialog
+                              width: MediaQuery.of(context).size.width * 0.8,
                               padding: EdgeInsets.all(16.0),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,

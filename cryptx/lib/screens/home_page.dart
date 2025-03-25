@@ -17,9 +17,7 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     HomeScreen(),
-    CollectionScreen(),
     HistoryScreen(),
-    LastScreen()
   ];
 
   @override
@@ -299,16 +297,8 @@ class _HomePageState extends State<HomePage> {
             label: 'Trang chủ',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.grid_view),
-            label: 'Bộ sưu tập',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.history),
             label: 'Lịch sử',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.network_check),
-            label: 'Mạng lưới',
           ),
         ],
         onTap: (index) {
