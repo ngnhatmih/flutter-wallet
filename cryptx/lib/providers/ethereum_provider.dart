@@ -117,9 +117,11 @@ class EthereumProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void switchWallet(int index) {
+  void switchWallet(int index) async {
     if (index >= 0 && index < _wallets.length) {
       _walletModel = _wallets[index];
+      await fetchBalance();
+      await fetchPriceChange();
       notifyListeners();
     }
   }
@@ -168,6 +170,11 @@ class EthereumProvider extends ChangeNotifier {
         _isLoading = true;
         Future.microtask(() => notifyListeners());
       }
+      if (tokenSymbol != _currentNetwork?['currencySymbol']) {
+        var tkaddress = _tokens.firstWhere((token) => token.symbol == tokenSymbol).address;
+        await sendTokenTransaction(receiver, ethAmount, tkaddress, tokenSymbol);
+        return;
+      }
 
       var decimal = BigInt.from(10).pow(18);
       var amount = BigInt.from(decimal.toDouble() * ethAmount);
@@ -175,7 +182,6 @@ class EthereumProvider extends ChangeNotifier {
       var sender = EthereumAddress.fromHex(_walletModel.getAddress);
       var toAddress = EthereumAddress.fromHex(receiver);
 
-      // Gửi giao dịch
       var txHash = await _ethereumService.sendTransaction(
         creds,
         sender,
@@ -184,12 +190,11 @@ class EthereumProvider extends ChangeNotifier {
       );
       print('txHash: $txHash');
 
-      // Tạo giao dịch mới với thông tin token
       await _transactionService.createTransaction(TransactionModel(
         from: _walletModel,
         to: WalletModel(publicKey: receiver),
         amount: ethAmount,
-        tokenSymbol: tokenSymbol, // Truyền tokenSymbol
+        tokenSymbol: tokenSymbol,
       ));
 
       await fetchBalance();
@@ -201,6 +206,48 @@ class EthereumProvider extends ChangeNotifier {
       Future.microtask(() => notifyListeners());
     }
   }
+
+  Future<void> sendTokenTransaction(
+    String receiver,
+    double tokenAmount,
+    String tokenAddress,
+    String tokenSymbol
+) async {
+  try {
+    if (!_isLoading) {
+      _isLoading = true;
+      Future.microtask(() => notifyListeners());
+    }
+    final decimals = await _ethereumService.getTokenDecimals(EthereumAddress.fromHex(tokenAddress));
+    final amount = BigInt.from(tokenAmount * BigInt.from(10).pow(decimals).toDouble());
+    final creds = EthPrivateKey.fromHex(_walletModel.getPrivateKey);
+    final toAddress = EthereumAddress.fromHex(receiver);
+    final tokenContractAddress = EthereumAddress.fromHex(tokenAddress);
+
+    await _ethereumService.transferToken(
+      creds,
+      tokenContractAddress,
+      toAddress,
+      amount,
+    );
+
+    await _transactionService.createTransaction(TransactionModel(
+      from: _walletModel,
+      to: WalletModel(publicKey: receiver),
+      amount: tokenAmount,
+      tokenSymbol: tokenSymbol,
+    ));
+
+    await fetchBalance();
+
+    _isLoading = false;
+    Future.microtask(() => notifyListeners());
+  } catch (e) {
+    print('Error sending token transaction: $e');
+    _isLoading = false;
+    Future.microtask(() => notifyListeners());
+  }
+}
 
   Future<void> loadTransactions() async {
     _transactions = await _transactionService

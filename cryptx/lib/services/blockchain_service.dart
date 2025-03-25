@@ -47,18 +47,27 @@ class EthereumService {
     return EtherAmount.inWei(result.first);
   }
 
-  Future<String> transferToken(Credentials credentials, EthereumAddress tokenAddress, EthereumAddress receiver, EtherAmount amount) async {
+  Future<String> transferToken(
+    Credentials credentials,
+    EthereumAddress tokenAddress,
+    EthereumAddress receiver,
+    BigInt amount,
+  ) async {
     final contract = await loadContract(tokenAddress);
     final transferFunction = contract.function("transfer");
+
+    final transaction = Transaction.callContract(
+      contract: contract,
+      function: transferFunction,
+      parameters: [receiver, amount],
+    );
+
     final response = await ethClient.sendTransaction(
       credentials,
-      Transaction.callContract(
-        contract: contract,
-        function: transferFunction,
-        parameters: [receiver, amount.getInWei],
-      ),
+      transaction,
       chainId: chainId,
     );
+
     return response;
   }
 

@@ -44,7 +44,7 @@ class CoinGeckoService {
   }
 
   Future<double?> getCryptoPriceChange(String symbol, String currency) async {
-    if (!cryptoMapping.containsValue(symbol)) {
+    if (!cryptoMapping.containsKey(symbol)) {
       return 0.0;
     }
 

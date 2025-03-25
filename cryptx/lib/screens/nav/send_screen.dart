@@ -38,7 +38,10 @@ class SendScreenState extends State<SendScreen> {
     ethereumProvider.fetchPriceChange();
     ethereumProvider.startAutoUpdateBalance();
 
-    tokens = [ethereumProvider.currentNetwork?['currencySymbol'], "USDT"];
+    tokens = [ethereumProvider.currentNetwork?['currencySymbol']];
+    for (var token in ethereumProvider.tokens) {
+      tokens.add(token.getSymbol);
+    }
     selectedToken = tokens.first;
   }
 
@@ -217,7 +220,7 @@ class SendScreenState extends State<SendScreen> {
                       ethereumProvider.sendTransaction(
                         addressController.text.toLowerCase(),
                         double.parse(amountController.text),
-                        tokenSymbol: selectedToken, // Truyền tokenSymbol
+                        tokenSymbol: selectedToken,
                       );
                       amountController.clear();
                       addressController.clear();

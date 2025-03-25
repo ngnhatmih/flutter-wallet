@@ -172,12 +172,12 @@ class _HomePageState extends State<HomePage> {
 
                                                         setState(() {
                                                           ethereumProvider.wallets.add(newWallet);
+                                                          ethereumProvider.switchWallet(ethereumProvider.wallets.length - 1);
                                                         });
 
-                                                        // Save the updated wallet list
                                                         ethereumProvider.saveVault(ethereumProvider.wallets);
 
-                                                        Navigator.of(context).pop(); // Close the dialog
+                                                        Navigator.of(context).pop();
                                                         ScaffoldMessenger.of(context).showSnackBar(
                                                           SnackBar(content: Text('Wallet imported successfully!')),
                                                         );

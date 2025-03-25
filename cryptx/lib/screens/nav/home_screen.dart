@@ -27,7 +27,7 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    ethereumProvider = Provider.of<EthereumProvider>(context);
+    ethereumProvider = Provider.of<EthereumProvider>(context, listen: true);
   }
 
   @override
