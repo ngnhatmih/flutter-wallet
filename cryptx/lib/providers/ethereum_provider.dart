@@ -152,6 +152,8 @@ class EthereumProvider extends ChangeNotifier {
       _walletModel = _wallets[index];
       await fetchBalance();
       await fetchPriceChange();
+
+      saveTokens(_tokens);
       notifyListeners();
     }
   }
@@ -308,10 +310,13 @@ class EthereumProvider extends ChangeNotifier {
         EtherAmount balance = await _ethereumService.getAmount(
             EthereumAddress.fromHex(token.address),
             EthereumAddress.fromHex(_walletModel.getAddress));
-        token.balance = balance.getValueInUnit(EtherUnit.ether);
+
+        
         var decimal = await _ethereumService.getTokenDecimals(EthereumAddress.fromHex(token.address));
+        token.balance = balance.getValueInUnit(EtherUnit.wei) / BigInt.from(10).pow(decimal).toDouble();
         var price = await _coinGeckoService.getCryptoPrice(token.symbol, 'usd') ?? 0.0;
-        sum += balance.getValueInUnit(EtherUnit.wei) / BigInt.from(10).pow(decimal).toDouble() * price;
+        
+        sum += token.balance * price;
       }
 
       _walletModel.setBalance = sum.toDouble();
@@ -373,7 +378,7 @@ class EthereumProvider extends ChangeNotifier {
         tokenCards.add(TokenCard(
           tokenName: symbol,
           balance: balance.toStringAsFixed(3),
-          price: price.toStringAsFixed(3),
+          price: (price * balance).toStringAsFixed(3),
         ));
       }
     }

@@ -13,7 +13,6 @@ class _SwapScreenState extends State<SwapScreen> {
   String? _tokenOut;
   double? _amountIn;
   double? _amountOutMin;
-  double _gasFee = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +20,7 @@ class _SwapScreenState extends State<SwapScreen> {
 
     double balanceIn() {
       if (_tokenIn == "primary") {
-        return ethereumProvider.walletModel!.getBalance;
+        return ethereumProvider.walletModel!.getEtherAmount;
       } else {
         return ethereumProvider.tokens
             .firstWhere((element) => element.address == _tokenIn)
@@ -31,7 +30,7 @@ class _SwapScreenState extends State<SwapScreen> {
 
     double balanceOut() {
       if (_tokenOut == "primary") {
-        return ethereumProvider.walletModel!.getBalance;
+        return ethereumProvider.walletModel!.getEtherAmount;
       } else {
         return ethereumProvider.tokens
             .firstWhere((element) => element.address == _tokenOut)
@@ -92,7 +91,7 @@ class _SwapScreenState extends State<SwapScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
-                    "Số dư: ${balanceIn().toStringAsFixed(6)} ${ethereumProvider.currentNetwork?['currencySymbol'] ?? ''}",
+                    "Số dư: ${balanceIn().toStringAsFixed(6)} ${(_tokenIn == "primary" ? ethereumProvider.currentNetwork!['currencySymbol'] : ethereumProvider.tokens.firstWhere((element) => element.address == _tokenIn).symbol) ?? ''}",
                   ),
                 ),
               SizedBox(height: 16),
@@ -135,7 +134,7 @@ class _SwapScreenState extends State<SwapScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
-                    "Số dư: ${balanceOut().toStringAsFixed(6)} ${ethereumProvider.currentNetwork?['currencySymbol'] ?? ''}",
+                    "Số dư: ${balanceOut().toStringAsFixed(6)} ${(_tokenOut == "primary" ? ethereumProvider.currentNetwork!['currencySymbol'] : ethereumProvider.tokens.firstWhere((element) => element.address == _tokenOut).symbol) ?? ''}",
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),

@@ -13,6 +13,8 @@ class CoinGeckoService {
     "BNB": "binancecoin",
     "MATIC": "matic-network",
     "SOL": "solana",
+    "USD₮0": "tether",
+    "USDT": "tether",
   };
 
 

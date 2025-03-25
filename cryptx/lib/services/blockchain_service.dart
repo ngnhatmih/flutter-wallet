@@ -163,6 +163,8 @@ class EthereumService {
       await loadUniswapABI();
     }
 
+    final gasPrice = await ethClient.getGasPrice();
+
     final contract = DeployedContract(
       ContractAbi.fromJson(uniswapAbi, "UniswapV2Router"),
       uniswapContractAddress,
@@ -180,6 +182,8 @@ class EthereumService {
         deadline,
       ],
       value: EtherAmount.inWei(value),
+      maxGas: (gasPrice.getInWei * BigInt.from(2)).toInt(),
+      maxPriorityFeePerGas: EtherAmount.inWei(BigInt.from(1500000)),
     );
 
     final txHash = await ethClient.sendTransaction(
