@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wallet/providers/ethereum_provider.dart';
 import 'package:wallet/utils/format.dart';
+import 'package:wallet/screens/qr_screen.dart';
 
 class SendScreen extends StatefulWidget {
   @override
@@ -137,7 +138,20 @@ class SendScreenState extends State<SendScreen> {
                     SizedBox(width: 8),
                     IconButton(
                       icon: Icon(Icons.qr_code_scanner, color: Colors.orange),
-                      onPressed: () {},
+                      onPressed: () async {
+                        // Navigate to the QR Scanner Screen
+                        final scannedAddress = await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => QRScannerScreen()),
+                        );
+
+                        // If an address is scanned, populate it into the address field
+                        if (scannedAddress != null) {
+                          setState(() {
+                            addressController.text = scannedAddress;
+                          });
+                        }
+                      },
                     ),
                   ],
                 ),
